@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Sandbox mocks only — never stage/prod
+  VITE_API_BASE_URL: http://localhost:4010
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build web
+        run: pnpm --filter web build
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium --with-deps
+
+      - name: Prepare web sandbox env
+        run: cp apps/web/.env.sandbox apps/web/.env
+
+      - name: Start mocks
+        run: |
+          pnpm --filter mocks start > /tmp/mocks.log 2>&1 &
+          echo $! > /tmp/mocks.pid
+
+      - name: Start web
+        run: |
+          pnpm --filter web dev > /tmp/web.log 2>&1 &
+          echo $! > /tmp/web.pid
+
+      - name: Wait for servers
+        run: |
+          set -e
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:4010/health >/dev/null && curl -sf http://127.0.0.1:5173 >/dev/null; then
+              echo "mocks and web are up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "=== mocks.log ==="
+          cat /tmp/mocks.log || true
+          echo "=== web.log ==="
+          cat /tmp/web.log || true
+          exit 1
+
+      - name: Run Playwright e2e
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop servers
+        if: always()
+        run: |
+          kill $(cat /tmp/web.pid) 2>/dev/null || true
+          kill $(cat /tmp/mocks.pid) 2>/dev/null || true

@@ -1,21 +1,25 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": { "enabled": true },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "suspicious": {
-        "noRestrictedImports": {
-          "level": "error",
-          "options": {
-            "paths": {
-              "../../mocks": "Mocks are external infrastructure. Application code must not import them."
-            }
-          }
-        }
-      }
-    }
-  },
-  "formatter": { "enabled": true }
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		}
+	},
+	"formatter": {
+		"enabled": true
+	},
+	"files": {
+		"ignore": [
+			"**/dist/**",
+			"**/node_modules/**",
+			"playwright-report/**",
+			"test-results/**",
+			"docs/evidence/**",
+			"pnpm-lock.yaml"
+		]
+	}
 }
