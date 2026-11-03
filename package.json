@@ -1,7 +1,7 @@
 {
 	"name": "access-requests-sample",
 	"private": true,
-	"packageManager": "pnpm@9.0.0",
+	"packageManager": "pnpm@9.15.9",
 	"scripts": {
 		"dev:mocks": "pnpm --filter mocks dev",
 		"dev:web": "pnpm --filter web dev",
