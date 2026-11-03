@@ -1,14 +1,14 @@
 {
-  "name": "@access-requests/clients",
-  "private": true,
-  "type": "module",
-  "main": "./src/index.js",
-  "exports": {
-    ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js",
-      "import": "./src/index.js"
-    }
-  },
-  "types": "./src/index.d.ts"
+	"name": "@access-requests/clients",
+	"private": true,
+	"type": "module",
+	"main": "./src/index.js",
+	"exports": {
+		".": {
+			"types": "./src/index.d.ts",
+			"import": "./src/index.js",
+			"default": "./src/index.js"
+		}
+	},
+	"types": "./src/index.d.ts"
 }

@@ -8,20 +8,20 @@ import { RequestDetailPage } from "./pages/RequestDetailPage";
 import { RequestsPage } from "./pages/RequestsPage";
 
 export function App() {
-  return (
-    <MockProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="requests" element={<RequestsPage />} />
-            <Route path="requests/new" element={<NewRequestPage />} />
-            <Route path="requests/:id" element={<RequestDetailPage />} />
-            <Route path="audit" element={<AuditPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </MockProvider>
-  );
+	return (
+		<MockProvider>
+			<BrowserRouter>
+				<Routes>
+					<Route element={<AppLayout />}>
+						<Route index element={<DashboardPage />} />
+						<Route path="requests" element={<RequestsPage />} />
+						<Route path="requests/new" element={<NewRequestPage />} />
+						<Route path="requests/:id" element={<RequestDetailPage />} />
+						<Route path="audit" element={<AuditPage />} />
+						<Route path="*" element={<Navigate to="/" replace />} />
+					</Route>
+				</Routes>
+			</BrowserRouter>
+		</MockProvider>
+	);
 }
