@@ -1,17 +1,17 @@
 {
-  "name": "access-requests-sample",
-  "private": true,
-  "packageManager": "pnpm@9.0.0",
-  "scripts": {
-    "dev:mocks": "pnpm --filter mocks dev",
-    "dev:web": "pnpm --filter web dev",
-    "dev:api": "pnpm --filter api dev",
-    "test:e2e": "playwright test",
-    "lint": "biome check .",
-    "format": "biome format --write ."
-  },
-  "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@playwright/test": "^1.48.0"
-  }
+	"name": "access-requests-sample",
+	"private": true,
+	"packageManager": "pnpm@9.0.0",
+	"scripts": {
+		"dev:mocks": "pnpm --filter mocks dev",
+		"dev:web": "pnpm --filter web dev",
+		"dev:api": "pnpm --filter api dev",
+		"test:e2e": "playwright test",
+		"lint": "biome check .",
+		"format": "biome format --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"@playwright/test": "^1.48.0"
+	}
 }
