@@ -1,17 +1,16 @@
 {
-	"name": "access-requests-sample",
+	"name": "independent-apps-workspace",
 	"private": true,
 	"packageManager": "pnpm@9.15.9",
 	"scripts": {
-		"dev:mocks": "pnpm --filter mocks dev",
-		"dev:web": "pnpm --filter web dev",
-		"dev:api": "pnpm --filter api dev",
-		"test:e2e": "playwright test",
-		"lint": "biome check .",
+		"check:boundaries": "node scripts/check-boundaries.mjs",
+		"test:boundaries": "node --test scripts/*.test.mjs",
+		"lint": "pnpm check:boundaries && pnpm test:boundaries && biome check .",
+		"build": "pnpm -r --if-present build",
+		"test:e2e": "pnpm -r --if-present test:e2e",
 		"format": "biome format --write ."
 	},
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
-		"@playwright/test": "^1.48.0"
+		"@biomejs/biome": "1.9.4"
 	}
 }

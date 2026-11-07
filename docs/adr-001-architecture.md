@@ -1,7 +1,9 @@
 # ADR-001: Architecture for reliable internal tools
 
 ## Status
-Accepted
+Historical. Layout/shared-client placement superseded by [ADR-002](adr/ADR-002-self-contained-apps.md).
+Sandbox separation/header requirements remain; hey-api and real verification were
+intentions, not implemented features.
 
 ## Context
 We want an internal site that is super reliable and predictable for both humans and agents.
