@@ -1,4 +1,3 @@
-import { createRequest } from "@access-requests/clients";
 import {
 	Button,
 	Select,
@@ -11,6 +10,7 @@ import {
 import { notifications } from "@mantine/notifications";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createRequest } from "../../../client/src/index.js";
 import { ACCESS_LEVELS, apiBase } from "../lib/api";
 import { useMockFlag } from "../lib/mockContext";
 

@@ -11,15 +11,12 @@ importers:
       '@biomejs/biome':
         specifier: 1.9.4
         version: 1.9.4
-      '@playwright/test':
-        specifier: ^1.48.0
-        version: 1.64.1
 
-  apps/web:
+  apps/access-requests:
     dependencies:
-      '@access-requests/clients':
-        specifier: workspace:*
-        version: link:../../packages/clients
+      '@fastify/cors':
+        specifier: ^10.0.1
+        version: 10.1.0
       '@mantine/core':
         specifier: ^9.7.4
         version: 9.7.4(@mantine/hooks@9.7.4(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -29,6 +26,12 @@ importers:
       '@mantine/notifications':
         specifier: ^9.7.4
         version: 9.7.4(@mantine/core@9.7.4(@mantine/hooks@9.7.4(react@19.3.1))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@mantine/hooks@9.7.4(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@repo/shared':
+        specifier: file:../../packages/shared
+        version: link:../../packages/shared
+      fastify:
+        specifier: ^5.1.0
+        version: 5.12.8
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -39,6 +42,12 @@ importers:
         specifier: ^7.18.5
         version: 7.18.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
     devDependencies:
+      '@biomejs/biome':
+        specifier: 1.9.4
+        version: 1.9.4
+      '@playwright/test':
+        specifier: ^1.48.0
+        version: 1.64.1
       '@types/react':
         specifier: ^19.3.0
         version: 19.3.0
@@ -64,16 +73,7 @@ importers:
         specifier: ^5.4.10
         version: 5.4.21(sugarss@5.0.2(postcss@8.5.32))
 
-  mocks:
-    dependencies:
-      '@fastify/cors':
-        specifier: ^10.0.1
-        version: 10.1.0
-      fastify:
-        specifier: ^5.1.0
-        version: 5.12.8
-
-  packages/clients: {}
+  packages/shared: {}
 
 packages:
 

@@ -6,113 +6,118 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  # Sandbox mocks only — never stage/prod
-  VITE_API_BASE_URL: http://localhost:4010
-
 jobs:
-  build:
-    name: build
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.detect.outputs.apps }}
+      has_apps: ${{ steps.detect.outputs.has_apps }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - id: detect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: node scripts/changed-apps.mjs
+
+  repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check:boundaries && pnpm test:boundaries
+      - run: pnpm exec biome check package.json biome.json scripts packages
+      - run: pnpm --filter @repo/shared test
+
+  app-build:
+    needs: changes
+    if: needs.changes.outputs.has_apps == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.changes.outputs.apps) }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          version: 9.15.9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+          node-version: "22"
           cache: pnpm
+      - run: pnpm install --frozen-lockfile --filter "./apps/${{ matrix.app }}..."
+      - run: pnpm --dir "apps/${{ matrix.app }}" lint
+      - run: pnpm --dir "apps/${{ matrix.app }}" build
+      - name: Build independently deployable web image
+        run: docker build -f "apps/${{ matrix.app }}/Dockerfile" --target web -t "${{ matrix.app }}:ci" .
+      - name: Build sandbox image (not for production)
+        run: docker build -f "apps/${{ matrix.app }}/Dockerfile" --target sandbox -t "${{ matrix.app }}-sandbox:ci" .
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Build web
-        run: pnpm --filter web build
-
-  e2e:
-    name: e2e
+  app-e2e:
+    needs: changes
+    if: needs.changes.outputs.has_apps == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJSON(needs.changes.outputs.apps) }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          version: 9.15.9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+          node-version: "22"
           cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright Chromium
-        run: pnpm exec playwright install chromium --with-deps
-
-      - name: Prepare web sandbox env
-        run: cp apps/web/.env.sandbox apps/web/.env
-
-      - name: Start mocks
-        run: |
-          pnpm --filter mocks start > /tmp/mocks.log 2>&1 &
-          echo $! > /tmp/mocks.pid
-
-      - name: Start web
-        run: |
-          pnpm --filter web dev > /tmp/web.log 2>&1 &
-          echo $! > /tmp/web.pid
-
-      - name: Wait for servers
-        run: |
-          set -e
-          for i in $(seq 1 60); do
-            if curl -sf http://127.0.0.1:4010/health >/dev/null && curl -sf http://127.0.0.1:5173 >/dev/null; then
-              echo "mocks and web are up"
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "=== mocks.log ==="
-          cat /tmp/mocks.log || true
-          echo "=== web.log ==="
-          cat /tmp/web.log || true
-          exit 1
-
-      - name: Run Playwright e2e
-        run: pnpm test:e2e
-
-      - name: Upload Playwright report
+      - run: pnpm install --frozen-lockfile --filter "./apps/${{ matrix.app }}..."
+      - run: pnpm --dir "apps/${{ matrix.app }}" exec playwright install chromium --with-deps
+      - run: pnpm --dir "apps/${{ matrix.app }}" test:e2e
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-${{ matrix.app }}
           path: |
-            playwright-report/
-            test-results/
-          if-no-files-found: ignore
+            apps/${{ matrix.app }}/playwright-report/
+            apps/${{ matrix.app }}/test-results/
           retention-days: 14
 
-      - name: Stop servers
-        if: always()
-        run: |
-          kill $(cat /tmp/web.pid) 2>/dev/null || true
-          kill $(cat /tmp/mocks.pid) 2>/dev/null || true
+  # Stable, always-reporting branch protection gates, including docs-only PRs.
+  build:
+    if: always()
+    needs: [changes, repo, app-build]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          CHANGES: ${{ needs.changes.result }}
+          REPO: ${{ needs.repo.result }}
+          APP: ${{ needs.app-build.result }}
+          HAS_APPS: ${{ needs.changes.outputs.has_apps }}
+        run: test "$CHANGES" = success && test "$REPO" = success && { test "$APP" = success || test "$APP" = skipped && test "$HAS_APPS" = false; }
+
+  e2e:
+    if: always()
+    needs: [changes, app-e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          CHANGES: ${{ needs.changes.result }}
+          APP: ${{ needs.app-e2e.result }}
+          HAS_APPS: ${{ needs.changes.outputs.has_apps }}
+        run: test "$CHANGES" = success && { test "$APP" = success || test "$APP" = skipped && test "$HAS_APPS" = false; }

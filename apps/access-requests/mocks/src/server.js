@@ -1,5 +1,11 @@
+import { MOCK_HEADER } from "@repo/shared";
+
 import cors from "@fastify/cors";
 import Fastify from "fastify";
+
+if (process.env.NODE_ENV === "production") {
+	throw new Error("Sandbox mocks must never run in production");
+}
 
 const PORT = Number(process.env.PORT || 4010);
 
@@ -8,12 +14,12 @@ const app = Fastify({ logger: true });
 await app.register(cors, {
 	origin: true,
 	methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-	exposedHeaders: ["X-Mock"],
+	exposedHeaders: [MOCK_HEADER],
 });
 
 // Always mark responses as mock
 app.addHook("onSend", async (_request, reply, payload) => {
-	reply.header("X-Mock", "true");
+	reply.header(MOCK_HEADER, "true");
 	return payload;
 });
 

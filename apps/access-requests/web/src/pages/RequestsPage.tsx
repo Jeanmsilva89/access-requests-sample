@@ -1,4 +1,3 @@
-import { listRequests, updateRequestStatus } from "@access-requests/clients";
 import {
 	Anchor,
 	Button,
@@ -13,6 +12,10 @@ import {
 } from "@mantine/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+	listRequests,
+	updateRequestStatus,
+} from "../../../client/src/index.js";
 import { StatusBadge } from "../components/StatusBadge";
 import { type AccessRequest, apiBase } from "../lib/api";
 import { useMockFlag } from "../lib/mockContext";

@@ -1,4 +1,3 @@
-import { listAuditEvents } from "@access-requests/clients";
 import {
 	Anchor,
 	Badge,
@@ -11,6 +10,7 @@ import {
 } from "@mantine/core";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { listAuditEvents } from "../../../client/src/index.js";
 import { type AuditEvent, apiBase } from "../lib/api";
 import { useMockFlag } from "../lib/mockContext";
 
