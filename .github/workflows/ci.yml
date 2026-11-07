@@ -109,7 +109,15 @@ jobs:
           REPO: ${{ needs.repo.result }}
           APP: ${{ needs.app-build.result }}
           HAS_APPS: ${{ needs.changes.outputs.has_apps }}
-        run: test "$CHANGES" = success && test "$REPO" = success && { test "$APP" = success || test "$APP" = skipped && test "$HAS_APPS" = false; }
+        run: |
+          test "$CHANGES" = success
+          test "$REPO" = success
+          if [ "$HAS_APPS" = true ]; then
+            test "$APP" = success
+          else
+            test "$HAS_APPS" = false
+            test "$APP" = skipped
+          fi
 
   e2e:
     if: always()
@@ -120,4 +128,11 @@ jobs:
           CHANGES: ${{ needs.changes.result }}
           APP: ${{ needs.app-e2e.result }}
           HAS_APPS: ${{ needs.changes.outputs.has_apps }}
-        run: test "$CHANGES" = success && { test "$APP" = success || test "$APP" = skipped && test "$HAS_APPS" = false; }
+        run: |
+          test "$CHANGES" = success
+          if [ "$HAS_APPS" = true ]; then
+            test "$APP" = success
+          else
+            test "$HAS_APPS" = false
+            test "$APP" = skipped
+          fi
